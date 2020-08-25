@@ -1,15 +1,16 @@
 package main
 
 import (
-	"github.com/refactored-spoon-backend/lib"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"log"
 	"net/http"
+
+	"../../lib"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type userRequest struct {
-	ID primitive.ObjectID `bson:"_id, omitempty"`
-	Email string
+	ID       primitive.ObjectID `bson:"_id, omitempty"`
+	Email    string
 	Password string
 }
 

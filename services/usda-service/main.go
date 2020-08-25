@@ -3,13 +3,16 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/refactored-spoon-backend/lib"
+
+	"../../lib"
+
+	// "github.com/refactored-spoon-backend/lib"
 	"log"
 	"net/http"
 )
 
-const(
-	apiKey = "EH6jWPD9LdlAPYrnQzR4luccqsnhUBwSd99kwocV"
+const (
+	apiKey                      = "EH6jWPD9LdlAPYrnQzR4luccqsnhUBwSd99kwocV"
 	usdaFoodDataCentralEndpoint = "https://api.nal.usda.gov/fdc/v1/"
 )
 
@@ -19,22 +22,22 @@ type foodSearchRequest struct {
 
 type foodSearchCriteria struct {
 	GeneralSearchInput string
-	PageNumber int
-	RequireAllWords bool
+	PageNumber         int
+	RequireAllWords    bool
 }
 
 type usdaFood struct {
-	FdcId int
+	FdcId       int
 	Description string
-	BrandOwner string
+	BrandOwner  string
 	Ingredients string
 }
 
 type foodSearchResult struct {
 	FoodSearchCriteria foodSearchCriteria
-	CurrentPage int
-	TotalPages int
-	Foods []usdaFood
+	CurrentPage        int
+	TotalPages         int
+	Foods              []usdaFood
 }
 
 type foodDetailRequest struct {
@@ -46,27 +49,27 @@ type labelNutrient struct {
 }
 
 type labelNutrients struct {
-	Fat labelNutrient
-	SaturatedFat labelNutrient
-	TransFat labelNutrient
-	Cholesterol labelNutrient
-	Sodium labelNutrient
+	Fat           labelNutrient
+	SaturatedFat  labelNutrient
+	TransFat      labelNutrient
+	Cholesterol   labelNutrient
+	Sodium        labelNutrient
 	Carbohydrates labelNutrient
-	Fiber labelNutrient
-	Sugars labelNutrient
-	Protein labelNutrient
-	Calcium labelNutrient
-	Iron labelNutrient
-	Calories labelNutrient
+	Fiber         labelNutrient
+	Sugars        labelNutrient
+	Protein       labelNutrient
+	Calcium       labelNutrient
+	Iron          labelNutrient
+	Calories      labelNutrient
 }
 
 type foodDetailResult struct {
-	FoodClass string
-	Description string
-	Ingredients string
-	ServingSize float64
+	FoodClass       string
+	Description     string
+	Ingredients     string
+	ServingSize     float64
 	ServingSizeUnit string
-	LabelNutrients labelNutrients
+	LabelNutrients  labelNutrients
 }
 
 func main() {
@@ -86,16 +89,16 @@ func SearchFood(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&queryStr)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("unable to decode food search request"))
+		w.Write([]byte("unable to decode food search request:\n" + err.Error()))
 		return
 	}
 
 	searchReqBody := []byte(`{"generalSearchInput":"` + queryStr.Food + `"}`)
 
-	req, err := http.NewRequest(http.MethodPost, usdaFoodDataCentralEndpoint + "search?api_key=" + apiKey, bytes.NewBuffer(searchReqBody))
+	req, err := http.NewRequest(http.MethodPost, usdaFoodDataCentralEndpoint+"search?api_key="+apiKey, bytes.NewBuffer(searchReqBody))
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("unable to create POST request to search USDA food data central db"))
+		w.Write([]byte("unable to create POST request to search USDA food data central db:\n" + err.Error()))
 		return
 	}
 
@@ -103,7 +106,7 @@ func SearchFood(w http.ResponseWriter, r *http.Request) {
 	res, err := client.Do(req)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("unable to send POST request to search USDA food data central db"))
+		w.Write([]byte("unable to send POST request to search USDA food data central db:\n" + err.Error()))
 		return
 	}
 	defer res.Body.Close()
@@ -129,21 +132,21 @@ func FoodDetail(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&queryStr)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("unable to decode food detail request"))
+		w.Write([]byte("unable to decode food detail request:\n" + err.Error()))
 		return
 	}
 
-	req, err := http.NewRequest(http.MethodGet, usdaFoodDataCentralEndpoint + queryStr.Food + "?api_key=" + apiKey, nil)
+	req, err := http.NewRequest(http.MethodGet, usdaFoodDataCentralEndpoint+queryStr.Food+"?api_key="+apiKey, nil)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("unable to create GET request to detail USDA food data central db"))
+		w.Write([]byte("unable to create GET request to detail USDA food data central db:\n" + err.Error()))
 		return
 	}
 
 	res, err := client.Do(req)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("unable to send GET request to detail USDA food data central db"))
+		w.Write([]byte("unable to send GET request to detail USDA food data central db:\n" + err.Error()))
 		return
 	}
 	defer res.Body.Close()

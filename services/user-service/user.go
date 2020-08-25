@@ -3,11 +3,12 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"net/http"
+	"time"
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"net/http"
-	"time"
 )
 
 type UserService struct {
@@ -15,7 +16,7 @@ type UserService struct {
 }
 
 func NewUserService(collection *mongo.Collection) *UserService {
-	return &UserService{collection:collection}
+	return &UserService{collection: collection}
 }
 
 func (u *UserService) Signup(w http.ResponseWriter, r *http.Request) {
@@ -24,17 +25,19 @@ func (u *UserService) Signup(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&userReq)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("could not decode user signup request"))
+		w.Write([]byte("could not decode user signup request:\n" + err.Error()))
 		return
 	}
 
 	// verify on client side that both email and password are provided
 
-	ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
 	res, err := u.collection.InsertOne(ctx, bson.M{"email": userReq.Email, "password": userReq.Password})
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("unable to insert into user collection"))
+		w.Write([]byte("unable to insert into user collection:\n" + err.Error()))
 		return
 	}
 
@@ -48,18 +51,20 @@ func (u *UserService) Login(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&userReq)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("could not decode user login request"))
+		w.Write([]byte("could not decode user login request:\n" + err.Error()))
 		return
 	}
 
-	ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
 	res := u.collection.FindOne(ctx, bson.M{"email": userReq.Email, "password": userReq.Password})
 
 	var findRes userRequest
 	err = res.Decode(&findRes)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte("could not find user with this login"))
+		w.Write([]byte("could not find user with this login:\n" + err.Error()))
 		return
 	}
 

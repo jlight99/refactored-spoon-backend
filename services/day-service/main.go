@@ -3,12 +3,15 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"github.com/refactored-spoon-backend/lib"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+
+	"../../lib"
+
 	"log"
 	"net/http"
 	"time"
+
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 const (
@@ -20,27 +23,27 @@ type nutritionSummary struct {
 }
 
 type food struct {
-	name string
-	group string
-	serving string
+	name      string
+	group     string
+	serving   string
 	nutrition nutritionSummary
 }
 
 type meal struct {
-	foods []food
+	foods     []food
 	nutrition nutritionSummary
 }
 
 type meals struct {
 	breakfast meal
-	lunch meal
-	dinner meal
+	lunch     meal
+	dinner    meal
 }
 
 type DayRecord struct {
-	User primitive.ObjectID
-	Date primitive.DateTime
-	Meals meals
+	User      primitive.ObjectID
+	Date      primitive.DateTime
+	Meals     meals
 	Nutrition nutritionSummary
 }
 
@@ -71,15 +74,17 @@ func main() {
 			err := decoder.Decode(&req)
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte("could not decode get day request"))
+				w.Write([]byte("could not decode get day request:\n" + err.Error()))
 				return
 			}
 
-			ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+
 			cur, err := collection.Find(ctx, bson.M{"user": req.User})
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte("could not find day results"))
+				w.Write([]byte("could not find day results:\n" + err.Error()))
 				return
 			}
 			defer cur.Close(ctx)
@@ -90,6 +95,7 @@ func main() {
 				var dayRecord TestDayRecord
 				err := cur.Decode(&dayRecord)
 				if err != nil {
+					w.Write([]byte(err.Error()))
 					return
 				}
 				dayRecords = append(dayRecords, dayRecord)
@@ -103,15 +109,17 @@ func main() {
 			err := decoder.Decode(&req)
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte("could not decode post day request"))
+				w.Write([]byte("could not decode post day request:\n" + err.Error()))
 				return
 			}
 
-			ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+
 			res, err := collection.InsertOne(ctx, bson.M{"user": req.User, "date": req.Date})
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte("unable to insert into day collection"))
+				w.Write([]byte("unable to insert into day collection:\n" + err.Error()))
 				return
 			}
 
