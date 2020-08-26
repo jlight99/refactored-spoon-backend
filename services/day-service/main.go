@@ -18,43 +18,27 @@ const (
 	dateLayout = "2020-01-12"
 )
 
-type nutritionSummary struct {
-	calories int
+type NutritionSummary struct {
+	Calories int
 }
 
-type food struct {
-	name      string
-	group     string
-	serving   string
-	nutrition nutritionSummary
+type Food struct {
+	Name      string
+	Group     string
+	Serving   string
+	Nutrition NutritionSummary
 }
 
-type meal struct {
-	foods     []food
-	nutrition nutritionSummary
-}
-
-type meals struct {
-	breakfast meal
-	lunch     meal
-	dinner    meal
+type Meal struct {
+	Foods []Food
+	// Nutrition NutritionSummary
 }
 
 type DayRecord struct {
-	User      primitive.ObjectID
-	Date      primitive.DateTime
-	Meals     meals
-	Nutrition nutritionSummary
-}
-
-type TestDayRecord struct {
-	User string
-	Date string
-}
-
-type postDayReq struct {
-	Date string
-	User string
+	Date  string
+	User  string
+	Meals []Meal
+	// 	Nutrition NutritionSummary
 }
 
 type getDayReq struct {
@@ -89,10 +73,10 @@ func main() {
 			}
 			defer cur.Close(ctx)
 
-			dayRecords := make([]TestDayRecord, 0)
+			dayRecords := make([]DayRecord, 0)
 
 			for cur.Next(ctx) {
-				var dayRecord TestDayRecord
+				var dayRecord DayRecord
 				err := cur.Decode(&dayRecord)
 				if err != nil {
 					w.Write([]byte(err.Error()))
@@ -105,7 +89,7 @@ func main() {
 			json.NewEncoder(w).Encode(dayRecords)
 		case http.MethodPost:
 			decoder := json.NewDecoder(r.Body)
-			var req postDayReq
+			var req DayRecord
 			err := decoder.Decode(&req)
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
@@ -116,7 +100,16 @@ func main() {
 			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 			defer cancel()
 
-			res, err := collection.InsertOne(ctx, bson.M{"user": req.User, "date": req.Date})
+			reqMeals := bson.A{}
+			for _, meal := range req.Meals {
+				reqMeals = append(reqMeals, meal)
+			}
+
+			res, err := collection.InsertOne(ctx, bson.D{
+				{Key: "user", Value: req.User},
+				{Key: "date", Value: req.Date},
+				{Key: "meals", Value: reqMeals},
+			})
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 				w.Write([]byte("unable to insert into day collection:\n" + err.Error()))
