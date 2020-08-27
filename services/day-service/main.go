@@ -29,17 +29,28 @@ type Food struct {
 	Nutrition NutritionSummary
 }
 
-type Meal struct {
+type InputMeal struct {
 	Name  string
 	Foods []Food
-	// Nutrition NutritionSummary
 }
 
-type DayRecord struct {
+type InputDayRecord struct {
 	Date  string
 	User  string
-	Meals []Meal
-	// 	Nutrition NutritionSummary
+	Meals []InputMeal
+}
+
+type SavedMeal struct {
+	Name      string
+	Foods     []Food
+	Nutrition NutritionSummary
+}
+
+type SavedDayRecord struct {
+	Date      string
+	User      string
+	Meals     []SavedMeal
+	Nutrition NutritionSummary
 }
 
 type getDayReq struct {
@@ -72,10 +83,10 @@ func Days(w http.ResponseWriter, r *http.Request) {
 		}
 		defer cur.Close(ctx)
 
-		dayRecords := make([]DayRecord, 0)
+		dayRecords := make([]SavedDayRecord, 0)
 
 		for cur.Next(ctx) {
-			var dayRecord DayRecord
+			var dayRecord SavedDayRecord
 			err := cur.Decode(&dayRecord)
 			if err != nil {
 				w.Write([]byte(err.Error()))
@@ -98,7 +109,7 @@ func Day(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodPost:
 		decoder := json.NewDecoder(r.Body)
-		var req DayRecord
+		var req InputDayRecord
 		err := decoder.Decode(&req)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -109,15 +120,30 @@ func Day(w http.ResponseWriter, r *http.Request) {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 
+		dayCalories := 0
+
 		reqMeals := bson.A{}
 		for _, meal := range req.Meals {
-			reqMeals = append(reqMeals, meal)
+			mealCalories := 0
+			for _, food := range meal.Foods {
+				mealCalories += food.Nutrition.Calories
+			}
+			savedMeal := SavedMeal{
+				Name:      meal.Name,
+				Foods:     meal.Foods,
+				Nutrition: NutritionSummary{mealCalories},
+			}
+			reqMeals = append(reqMeals, savedMeal)
+			dayCalories += mealCalories
 		}
+
+		dayNutrition := NutritionSummary{dayCalories}
 
 		res, err := collection.InsertOne(ctx, bson.D{
 			{Key: "user", Value: req.User},
 			{Key: "date", Value: req.Date},
 			{Key: "meals", Value: reqMeals},
+			{Key: "nutrition", Value: dayNutrition},
 		})
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
