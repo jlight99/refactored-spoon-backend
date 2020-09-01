@@ -29,27 +29,16 @@ type Food struct {
 	Nutrition NutritionSummary
 }
 
-type InputMeal struct {
-	Name  string
-	Foods []Food
-}
-
-type InputDayRecord struct {
-	Date  string
-	User  string
-	Meals []InputMeal
-}
-
-type SavedMeal struct {
+type Meal struct {
 	Name      string
 	Foods     []Food
 	Nutrition NutritionSummary
 }
 
-type SavedDayRecord struct {
+type DayRecord struct {
 	Date      string
 	User      string
-	Meals     []SavedMeal
+	Meals     []Meal
 	Nutrition NutritionSummary
 }
 
@@ -83,10 +72,10 @@ func Days(w http.ResponseWriter, r *http.Request) {
 		}
 		defer cur.Close(ctx)
 
-		dayRecords := make([]SavedDayRecord, 0)
+		dayRecords := make([]DayRecord, 0)
 
 		for cur.Next(ctx) {
-			var dayRecord SavedDayRecord
+			var dayRecord DayRecord
 			err := cur.Decode(&dayRecord)
 			if err != nil {
 				w.Write([]byte(err.Error()))
@@ -109,7 +98,7 @@ func Day(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodPost:
 		decoder := json.NewDecoder(r.Body)
-		var req InputDayRecord
+		var req DayRecord
 		err := decoder.Decode(&req)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -120,30 +109,11 @@ func Day(w http.ResponseWriter, r *http.Request) {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 
-		dayCalories := 0
-
-		reqMeals := bson.A{}
-		for _, meal := range req.Meals {
-			mealCalories := 0
-			for _, food := range meal.Foods {
-				mealCalories += food.Nutrition.Calories
-			}
-			savedMeal := SavedMeal{
-				Name:      meal.Name,
-				Foods:     meal.Foods,
-				Nutrition: NutritionSummary{mealCalories},
-			}
-			reqMeals = append(reqMeals, savedMeal)
-			dayCalories += mealCalories
-		}
-
-		dayNutrition := NutritionSummary{dayCalories}
-
 		res, err := collection.InsertOne(ctx, bson.D{
 			{Key: "user", Value: req.User},
 			{Key: "date", Value: req.Date},
-			{Key: "meals", Value: reqMeals},
-			{Key: "nutrition", Value: dayNutrition},
+			{Key: "meals", Value: req.Meals},
+			{Key: "nutrition", Value: req.Nutrition},
 		})
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -153,5 +123,32 @@ func Day(w http.ResponseWriter, r *http.Request) {
 
 		w.WriteHeader(http.StatusCreated)
 		w.Write([]byte(res.InsertedID.(primitive.ObjectID).Hex()))
+	case http.MethodPut:
+		decoder := json.NewDecoder(r.Body)
+		var req DayRecord
+		err := decoder.Decode(&req)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte("could not decode post day request:\n" + err.Error()))
+			return
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		res, err := collection.ReplaceOne(ctx, bson.M{"user": req.User, "date": req.Date}, bson.D{
+			{Key: "user", Value: req.User},
+			{Key: "date", Value: req.Date},
+			{Key: "meals", Value: req.Meals},
+			{Key: "nutrition", Value: req.Nutrition},
+		})
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte("unable to insert into day collection:\n" + err.Error()))
+			return
+		}
+
+		w.WriteHeader(http.StatusCreated)
+		// w.Write([]byte(res.getUpsertedId().Hex()))
 	}
 }

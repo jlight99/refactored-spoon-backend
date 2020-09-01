@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"strconv"
 
 	"../../lib"
 
@@ -15,60 +16,89 @@ const (
 	usdaFoodDataCentralEndpoint = "https://api.nal.usda.gov/fdc/v1/"
 )
 
-type foodSearchRequest struct {
+type FoodSearchRequest struct {
 	Food string
 }
 
-type foodSearchCriteria struct {
+type FoodSearchCriteria struct {
 	GeneralSearchInput string
 	PageNumber         int
 	RequireAllWords    bool
 }
 
-type usdaFood struct {
+type UsdaFood struct {
 	FdcId       int
 	Description string
 	BrandOwner  string
 	Ingredients string
 }
 
-type foodSearchResult struct {
-	FoodSearchCriteria foodSearchCriteria
+type FoodSearchResult struct {
+	FoodSearchCriteria FoodSearchCriteria
 	CurrentPage        int
 	TotalPages         int
-	Foods              []usdaFood
+	Foods              []UsdaFood
 }
 
-type foodDetailRequest struct {
-	Food string
+type FoodDetailRequest struct {
+	Food int
 }
 
-type labelNutrient struct {
+type LabelNutrient struct {
 	Value float64
 }
 
-type labelNutrients struct {
-	Fat           labelNutrient
-	SaturatedFat  labelNutrient
-	TransFat      labelNutrient
-	Cholesterol   labelNutrient
-	Sodium        labelNutrient
-	Carbohydrates labelNutrient
-	Fiber         labelNutrient
-	Sugars        labelNutrient
-	Protein       labelNutrient
-	Calcium       labelNutrient
-	Iron          labelNutrient
-	Calories      labelNutrient
+type LabelNutrients struct {
+	Fat           LabelNutrient
+	SaturatedFat  LabelNutrient
+	TransFat      LabelNutrient
+	Cholesterol   LabelNutrient
+	Sodium        LabelNutrient
+	Carbohydrates LabelNutrient
+	Fiber         LabelNutrient
+	Sugars        LabelNutrient
+	Protein       LabelNutrient
+	Calcium       LabelNutrient
+	Iron          LabelNutrient
+	Calories      LabelNutrient
 }
 
-type foodDetailResult struct {
+type Nutrient struct {
+	Id       int
+	Number   string
+	Name     string
+	Rank     int
+	UnitName string
+}
+
+type FoodNutrientDerivation struct {
+	Id                 int
+	Code               string
+	Description        string
+	FoodNutrientSource FoodNutrientSource
+}
+
+type FoodNutrientSource struct {
+	Id          int
+	Code        string
+	Description string
+}
+
+type FoodNutrient struct {
+	Type     string
+	Id       int
+	Nutrient Nutrient
+	Amount   float64
+}
+
+type FoodDetailResult struct {
 	FoodClass       string
 	Description     string
 	Ingredients     string
 	ServingSize     float64
 	ServingSizeUnit string
-	LabelNutrients  labelNutrients
+	// LabelNutrients  LabelNutrients
+	FoodNutrients []FoodNutrient
 }
 
 func main() {
@@ -84,9 +114,10 @@ func SearchFood(w http.ResponseWriter, r *http.Request) {
 	client := &http.Client{}
 
 	decoder := json.NewDecoder(r.Body)
-	var queryStr foodSearchRequest
+	var queryStr FoodSearchRequest
 	err := decoder.Decode(&queryStr)
 	if err != nil {
+		log.Println(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("unable to decode food search request:\n" + err.Error()))
 		return
@@ -96,6 +127,7 @@ func SearchFood(w http.ResponseWriter, r *http.Request) {
 
 	req, err := http.NewRequest(http.MethodPost, usdaFoodDataCentralEndpoint+"search?api_key="+apiKey, bytes.NewBuffer(searchReqBody))
 	if err != nil {
+		log.Println(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("unable to create POST request to search USDA food data central db:\n" + err.Error()))
 		return
@@ -104,6 +136,7 @@ func SearchFood(w http.ResponseWriter, r *http.Request) {
 	req.Header.Set("Content-Type", "application/json")
 	res, err := client.Do(req)
 	if err != nil {
+		log.Println(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("unable to send POST request to search USDA food data central db:\n" + err.Error()))
 		return
@@ -111,9 +144,10 @@ func SearchFood(w http.ResponseWriter, r *http.Request) {
 	defer res.Body.Close()
 
 	decoder = json.NewDecoder(res.Body)
-	var searchResults foodSearchResult
+	var searchResults FoodSearchResult
 	err = decoder.Decode(&searchResults)
 	if err != nil {
+		log.Println(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("unable to decode food search results: " + err.Error()))
 		return
@@ -127,16 +161,18 @@ func FoodDetail(w http.ResponseWriter, r *http.Request) {
 	client := &http.Client{}
 
 	decoder := json.NewDecoder(r.Body)
-	var queryStr foodDetailRequest
+	var queryStr FoodDetailRequest
 	err := decoder.Decode(&queryStr)
 	if err != nil {
+		log.Println(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("unable to decode food detail request:\n" + err.Error()))
 		return
 	}
 
-	req, err := http.NewRequest(http.MethodGet, usdaFoodDataCentralEndpoint+queryStr.Food+"?api_key="+apiKey, nil)
+	req, err := http.NewRequest(http.MethodGet, usdaFoodDataCentralEndpoint+strconv.Itoa(queryStr.Food)+"?api_key="+apiKey, nil)
 	if err != nil {
+		log.Println(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("unable to create GET request to detail USDA food data central db:\n" + err.Error()))
 		return
@@ -144,6 +180,7 @@ func FoodDetail(w http.ResponseWriter, r *http.Request) {
 
 	res, err := client.Do(req)
 	if err != nil {
+		log.Println(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("unable to send GET request to detail USDA food data central db:\n" + err.Error()))
 		return
@@ -151,9 +188,10 @@ func FoodDetail(w http.ResponseWriter, r *http.Request) {
 	defer res.Body.Close()
 
 	decoder = json.NewDecoder(res.Body)
-	var searchResults foodDetailResult
+	var searchResults FoodDetailResult
 	err = decoder.Decode(&searchResults)
 	if err != nil {
+		log.Println(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("unable to decode food detail results: " + err.Error()))
 		return
