@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"sort"
 
 	"../../lib"
 
@@ -92,6 +93,21 @@ func Days(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func sortMeals(meals []Meal) {
+	sort.Slice(meals, func(i, j int) bool {
+		if meals[i].Name == "dinner" || meals[j].Name == "breakfast" {
+			return false
+		}
+		if meals[i].Name == "breakfast" || meals[j].Name == "dinner" {
+			return true
+		}
+		if meals[i].Name == "lunch" && meals[j].Name == "dinner" {
+			return true
+		}
+		return false
+	})
+}
+
 func Day(w http.ResponseWriter, r *http.Request) {
 	collection := lib.GetCollection("Days")
 
@@ -108,6 +124,8 @@ func Day(w http.ResponseWriter, r *http.Request) {
 
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
+
+		sortMeals(req.Meals)
 
 		res, err := collection.InsertOne(ctx, bson.D{
 			{Key: "user", Value: req.User},
@@ -129,14 +147,16 @@ func Day(w http.ResponseWriter, r *http.Request) {
 		err := decoder.Decode(&req)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte("could not decode post day request:\n" + err.Error()))
+			w.Write([]byte("could not decode put day request:\n" + err.Error()))
 			return
 		}
 
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 
-		res, err := collection.ReplaceOne(ctx, bson.M{"user": req.User, "date": req.Date}, bson.D{
+		sortMeals(req.Meals)
+
+		_, err = collection.ReplaceOne(ctx, bson.M{"user": req.User, "date": req.Date}, bson.D{
 			{Key: "user", Value: req.User},
 			{Key: "date", Value: req.Date},
 			{Key: "meals", Value: req.Meals},
@@ -149,6 +169,5 @@ func Day(w http.ResponseWriter, r *http.Request) {
 		}
 
 		w.WriteHeader(http.StatusCreated)
-		// w.Write([]byte(res.getUpsertedId().Hex()))
 	}
 }
