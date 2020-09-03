@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"sort"
 
-	"../../lib"
+	"github.com/refactored-spoon-backend/lib"
 
 	"log"
 	"net/http"
@@ -26,7 +26,7 @@ type NutritionSummary struct {
 type Food struct {
 	Name      string
 	Group     string
-	Serving   string
+	Serving   int
 	Nutrition NutritionSummary
 }
 

@@ -4,7 +4,7 @@ import (
 	"log"
 	"net/http"
 
-	"../../lib"
+	"github.com/refactored-spoon-backend/lib"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 

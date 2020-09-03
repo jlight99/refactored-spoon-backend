@@ -4,8 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"strconv"
+	"strings"
 
-	"../../lib"
+	"github.com/refactored-spoon-backend/lib"
 
 	"log"
 	"net/http"
@@ -17,7 +18,8 @@ const (
 )
 
 type FoodSearchRequest struct {
-	Food string
+	Food     string
+	PageSize string
 }
 
 type FoodSearchCriteria struct {
@@ -42,6 +44,10 @@ type FoodSearchResult struct {
 
 type FoodDetailRequest struct {
 	Food int
+}
+
+type FoodsDetailRequest struct {
+	Foods []int
 }
 
 type LabelNutrient struct {
@@ -92,6 +98,7 @@ type FoodNutrient struct {
 }
 
 type FoodDetailResult struct {
+	FdcId           int
 	FoodClass       string
 	Description     string
 	Ingredients     string
@@ -106,6 +113,7 @@ func main() {
 
 	http.Handle("/food/search", lib.CorsMiddleware(http.HandlerFunc(SearchFood)))
 	http.Handle("/food/detail", lib.CorsMiddleware(http.HandlerFunc(FoodDetail)))
+	http.Handle("/foods/detail", lib.CorsMiddleware(http.HandlerFunc(FoodsDetail)))
 
 	log.Fatal(http.ListenAndServe(":8082", nil))
 }
@@ -123,7 +131,7 @@ func SearchFood(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	searchReqBody := []byte(`{"generalSearchInput":"` + queryStr.Food + `"}`)
+	searchReqBody := []byte(`{"generalSearchInput":"` + queryStr.Food + `", "pageSize":` + queryStr.PageSize + `}`)
 
 	req, err := http.NewRequest(http.MethodPost, usdaFoodDataCentralEndpoint+"search?api_key="+apiKey, bytes.NewBuffer(searchReqBody))
 	if err != nil {
@@ -194,6 +202,58 @@ func FoodDetail(w http.ResponseWriter, r *http.Request) {
 		log.Println(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("unable to decode food detail results: " + err.Error()))
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(searchResults)
+}
+
+func FoodsDetail(w http.ResponseWriter, r *http.Request) {
+	client := &http.Client{}
+
+	decoder := json.NewDecoder(r.Body)
+	var queryStr FoodsDetailRequest
+	err := decoder.Decode(&queryStr)
+	if err != nil {
+		log.Println(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("unable to decode foods detail request:\n" + err.Error()))
+		return
+	}
+
+	fdcIds := ""
+
+	for _, fdcId := range queryStr.Foods {
+		fdcIds += strconv.Itoa(fdcId) + ","
+	}
+	fdcIds = strings.TrimSuffix(fdcIds, ",")
+
+	req, err := http.NewRequest(http.MethodGet, usdaFoodDataCentralEndpoint+"foods?api_key="+apiKey+"&fdcIds="+fdcIds, nil)
+	// req, err := http.NewRequest(http.MethodGet, usdaFoodDataCentralEndpoint+strconv.Itoa(queryStr.Food)+"?api_key="+apiKey, nil)
+	if err != nil {
+		log.Println(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("unable to create GET request to detail USDA food data central db:\n" + err.Error()))
+		return
+	}
+
+	res, err := client.Do(req)
+	if err != nil {
+		log.Println(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("unable to send GET request to detail USDA food data central db:\n" + err.Error()))
+		return
+	}
+	defer res.Body.Close()
+
+	decoder = json.NewDecoder(res.Body)
+	var searchResults []FoodDetailResult
+	err = decoder.Decode(&searchResults)
+	if err != nil {
+		log.Println(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("unable to decode foods detail results: " + err.Error()))
 		return
 	}
 
