@@ -24,23 +24,26 @@ type NutritionSummary struct {
 }
 
 type Food struct {
-	Name      string
-	Group     string
-	Serving   int
-	Nutrition NutritionSummary
+	ID        primitive.ObjectID `bson:"_id,omitempty"`
+	Name      string             `bson:"name,omitempty"`
+	Group     string             `bson:"group,omitempty"`
+	Serving   int                `bson:"serving,omitempty"`
+	Nutrition NutritionSummary   `bson:"nutrition,omitempty"`
 }
 
 type Meal struct {
-	Name      string
-	Foods     []Food
-	Nutrition NutritionSummary
+	ID        primitive.ObjectID `bson:"_id,omitempty"`
+	Name      string             `bson:"name,omitempty"`
+	Foods     []Food             `bson:"foods,omitempty"`
+	Nutrition NutritionSummary   `bson:"nutrition,omitempty"`
 }
 
 type DayRecord struct {
-	Date      string
-	User      string
-	Meals     []Meal
-	Nutrition NutritionSummary
+	ID        primitive.ObjectID `bson:"_id,omitempty"`
+	Date      string             `bson:"date,omitempty"`
+	User      string             `bson:"user,omitempty"`
+	Meals     []Meal             `bson:"meals,omitempty"`
+	Nutrition NutritionSummary   `bson:"nutrition,omitempty"`
 }
 
 type getDayReq struct {
@@ -114,8 +117,8 @@ func Day(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodPost:
 		decoder := json.NewDecoder(r.Body)
-		var req DayRecord
-		err := decoder.Decode(&req)
+		var dayRecord DayRecord
+		err := decoder.Decode(&dayRecord)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte("could not decode post day request:\n" + err.Error()))
@@ -125,14 +128,20 @@ func Day(w http.ResponseWriter, r *http.Request) {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 
-		sortMeals(req.Meals)
+		sortMeals(dayRecord.Meals)
 
-		res, err := collection.InsertOne(ctx, bson.D{
-			{Key: "user", Value: req.User},
-			{Key: "date", Value: req.Date},
-			{Key: "meals", Value: req.Meals},
-			{Key: "nutrition", Value: req.Nutrition},
-		})
+		for i, _ := range dayRecord.Meals {
+			if dayRecord.Meals[i].ID == primitive.NilObjectID {
+				dayRecord.Meals[i].ID = primitive.NewObjectID()
+			}
+			for j, _ := range dayRecord.Meals[i].Foods {
+				if dayRecord.Meals[i].Foods[j].ID == primitive.NilObjectID {
+					dayRecord.Meals[i].Foods[j].ID = primitive.NewObjectID()
+				}
+			}
+		}
+
+		res, err := collection.InsertOne(ctx, dayRecord)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte("unable to insert into day collection:\n" + err.Error()))
@@ -143,8 +152,8 @@ func Day(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(res.InsertedID.(primitive.ObjectID).Hex()))
 	case http.MethodPut:
 		decoder := json.NewDecoder(r.Body)
-		var req DayRecord
-		err := decoder.Decode(&req)
+		var dayRecord DayRecord
+		err := decoder.Decode(&dayRecord)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte("could not decode put day request:\n" + err.Error()))
@@ -154,14 +163,20 @@ func Day(w http.ResponseWriter, r *http.Request) {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 
-		sortMeals(req.Meals)
+		sortMeals(dayRecord.Meals)
 
-		_, err = collection.ReplaceOne(ctx, bson.M{"user": req.User, "date": req.Date}, bson.D{
-			{Key: "user", Value: req.User},
-			{Key: "date", Value: req.Date},
-			{Key: "meals", Value: req.Meals},
-			{Key: "nutrition", Value: req.Nutrition},
-		})
+		for i, _ := range dayRecord.Meals {
+			if dayRecord.Meals[i].ID == primitive.NilObjectID {
+				dayRecord.Meals[i].ID = primitive.NewObjectID()
+			}
+			for j, _ := range dayRecord.Meals[i].Foods {
+				if dayRecord.Meals[i].Foods[j].ID == primitive.NilObjectID {
+					dayRecord.Meals[i].Foods[j].ID = primitive.NewObjectID()
+				}
+			}
+		}
+
+		_, err = collection.ReplaceOne(ctx, bson.M{"user": dayRecord.User, "date": dayRecord.Date}, dayRecord)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte("unable to insert into day collection:\n" + err.Error()))
