@@ -1,0 +1,59 @@
+REST endpoints
+
+// days
+
+// get all days for user
+GET /days
+
+// add new day for user
+// POST /days
+
+// get specific day for user
+GET /days/:date (ddmmyy)
+
+// delete day for user
+DELETE /days/:date
+
+note: should not support updating day yet, don't see any usecase
+
+
+// meals
+
+// add meal for user
+POST /days/:date/meals
+
+// get all meals of day for user
+GET /days/:date/meals
+
+// delete all meals of day for user
+DELETE /days/:date/meals
+
+// get specific meal of day for user
+GET /days/:date/meals/:mealId
+
+// update meal for user (can only update meal name currently)
+PUT /days/:date/meals/:meal
+
+// delete specific meal of day for user
+DELETE /days/:date/meals/:mealId
+
+
+// foods
+
+// add food for meal for user
+POST /days/:date/meals/:mealId/foods
+
+// update food for meal for user (can currently update serving size only)
+PUT /days/:date/meals/:mealId/foods/:foodId
+
+// get foods of meal for user
+GET /days/:date/meals/:mealId/foods
+
+// get specific food of meal for user
+GET /days/:date/meals/:mealId/foods/:foodId
+
+// delete food of meal for user
+DELETE /days/:date/meals/:mealId/foods/:foodId
+
+// delete all foods of meal for user
+DELETE /days/:date/meals/:mealId/foods
