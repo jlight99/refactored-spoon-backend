@@ -57,7 +57,7 @@ func handleRequests() {
 	router.Handle("/days", lib.CorsMiddleware(http.HandlerFunc(DaysHandler))).Methods(http.MethodGet, http.MethodOptions)
 	router.Handle("/days/{date}", lib.CorsMiddleware(http.HandlerFunc(DayHandler))).Methods(http.MethodGet, http.MethodDelete, http.MethodOptions)
 	router.Handle("/days/{date}/meals", lib.CorsMiddleware(http.HandlerFunc(MealsHandler))).Methods(http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodOptions)
-	// router.Handle("/days/{date}/meals/{mealId}", lib.CorsMiddleware(http.HandlerFunc(DaysHandler))).Methods(http.MethodGet, http.MethodPost, http.MethodOptions)
+	router.Handle("/days/{date}/meals/{mealId}", lib.CorsMiddleware(http.HandlerFunc(MealHandler))).Methods(http.MethodGet, http.MethodDelete, http.MethodOptions)
 	// router.Handle("/days/{date}/meals/{mealId}/foods", lib.CorsMiddleware(http.HandlerFunc(DaysHandler))).Methods(http.MethodGet, http.MethodPost, http.MethodOptions)
 	// router.Handle("/days/{date}/meals/{mealId}/foods/{foodId}", lib.CorsMiddleware(http.HandlerFunc(DaysHandler))).Methods(http.MethodGet, http.MethodPost, http.MethodOptions)
 

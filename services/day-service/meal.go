@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"log"
 	"net/http"
 	"time"
 
@@ -26,9 +27,59 @@ func MealsHandler(w http.ResponseWriter, r *http.Request) {
 		getMeals(w, r, collection, userID, date)
 	case http.MethodPost:
 		postMeal(w, r, collection, userID, date)
-	case http.MethodDelete:
-		// deleteDay(w, r, collection, userID, date)
+		// case http.MethodDelete:
+		// deleteMeals(w, r, collection, userID, date)
 	}
+}
+
+func MealHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	date := vars["date"]
+	mealID := vars["mealId"]
+	mealObjectID, err := primitive.ObjectIDFromHex(mealID)
+	if err != nil {
+		log.Println("aiya invalid meal ID")
+	}
+
+	collection := lib.GetCollection("Days")
+	userID := r.URL.Query().Get("user")
+
+	switch r.Method {
+	case http.MethodDelete:
+		deleteMeal(w, r, collection, userID, date, mealObjectID)
+		// case http.MethodPut:
+		// 	updateMeal(w, r, collection, userID, date, mealObjectID)
+	}
+}
+
+// func updateMeal(w http.ResponseWriter, r *http.Request, collection *mongo.Collection, userID string, date string, mealID primitive.ObjectID) {
+// collection.UpdateOne(
+// 	context.Background(),
+// 	bson.M{"user": userID, "date": date, "meals": bson.M{"$elemMatch": bson.M{"_id": mealID}}},
+// 	bson.M{"$set": bson.M{"name": dayRecord.Nutrition.Calories - mealToDelete.Nutrition.Calories}},
+// )
+// }
+
+func deleteMeal(w http.ResponseWriter, r *http.Request, collection *mongo.Collection, userID string, date string, mealID primitive.ObjectID) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	dayRecord := GetDayByDate(ctx, collection, userID, date)
+	var mealToDelete Meal
+	for _, meal := range dayRecord.Meals {
+		if meal.ID == mealID {
+			mealToDelete = meal
+			break
+		}
+	}
+	collection.UpdateOne(
+		ctx,
+		bson.M{"user": userID, "date": date, "meals": bson.M{"$elemMatch": bson.M{"_id": mealID}}},
+		bson.M{
+			"$set":  bson.M{"nutrition.calories": dayRecord.Nutrition.Calories - mealToDelete.Nutrition.Calories},
+			"$pull": bson.M{"meals": mealToDelete},
+		},
+	)
 }
 
 func getMeals(w http.ResponseWriter, r *http.Request, collection *mongo.Collection, userID string, date string) {
