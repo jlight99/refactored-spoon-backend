@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -182,26 +183,44 @@ func postMeal(w http.ResponseWriter, r *http.Request, collection *mongo.Collecti
 		}
 		_, err := collection.InsertOne(ctx, dayRecord)
 		if err != nil {
+			fmt.Println("insert dayRecord failed!")
+			fmt.Println(err.Error())
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte("unable to insert into day collection:\n" + err.Error()))
 			return
 		}
 	}
 
+	nutrition := dayRecord.Nutrition
+	nutrition.Calories += meal.Nutrition.Calories
+	nutrition.Protein += meal.Nutrition.Protein
+	nutrition.Carbs += meal.Nutrition.Carbs
+	nutrition.Fat += meal.Nutrition.Fat
+	nutrition.Sugar += meal.Nutrition.Sugar
+	nutrition.Fiber += meal.Nutrition.Fiber
+	nutrition.Sodium += meal.Nutrition.Sodium
+	nutrition.Calcium += meal.Nutrition.Calcium
+	nutrition.Iron += meal.Nutrition.Iron
+	nutrition.Cholesterol += meal.Nutrition.Cholesterol
+	nutrition.Potassium += meal.Nutrition.Potassium
+	nutrition.VitaminA += meal.Nutrition.VitaminA
+	nutrition.VitaminC += meal.Nutrition.VitaminC
+
 	_, err = collection.UpdateOne(
 		ctx,
 		bson.M{"user": userID, "date": date},
 		bson.M{
-			"$set":  bson.M{"nutrition.calories": dayRecord.Nutrition.Calories + meal.Nutrition.Calories},
+			"$set":  bson.M{"nutrition": nutrition},
 			"$push": bson.M{"meals": meal},
 		},
 	)
 	if err != nil {
+		fmt.Println("update failed!")
+		fmt.Println(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("unable to add meal into day collection:\n" + err.Error()))
 		return
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	// w.Write([]byte(res.InsertedID.(primitive.ObjectID).Hex()))
 }

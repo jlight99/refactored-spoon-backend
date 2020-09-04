@@ -20,15 +20,28 @@ const (
 )
 
 type NutritionSummary struct {
-	Calories int `json:"calories,omitempty" bson:"calories,omitempty"`
+	Calories    int     `json:"calories,omitempty" bson:"calories,omitempty"`
+	Protein     float64 `json:"protein,omitempty" bson:"protein,omitempty"`
+	Carbs       float64 `json:"carbs,omitempty" bson:"carbs,omitempty"`
+	Fat         float64 `json:"fat,omitempty" bson:"fat,omitempty"`
+	Sugar       float64 `json:"sugar,omitempty" bson:"sugar,omitempty"`
+	Fiber       float64 `json:"fiber,omitempty" bson:"fiber,omitempty"`
+	Sodium      int     `json:"sodium,omitempty" bson:"sodium,omitempty"`
+	Calcium     int     `json:"calcium,omitempty" bson:"calcium,omitempty"`
+	Iron        float64 `json:"iron,omitempty" bson:"iron,omitempty"`
+	Cholesterol int     `json:"cholesterol,omitempty" bson:"cholesterol,omitempty"`
+	Potassium   int     `json:"potassium,omitempty" bson:"potassium,omitempty"`
+	VitaminA    float64 `json:"vitaminA,omitempty" bson:"vitaminA,omitempty"`
+	VitaminC    float64 `json:"vitaminC,omitempty" bson:"vitaminC,omitempty"`
 }
 
 type Food struct {
-	ID        primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
-	Name      string             `json:"name,omitempty" bson:"name,omitempty"`
-	Group     string             `json:"group,omitempty" bson:"group,omitempty"`
-	Serving   int                `json:"serving,omitempty" bson:"serving,omitempty"`
-	Nutrition NutritionSummary   `json:"nutrition,omitempty" bson:"nutrition,omitempty"`
+	ID            primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	Name          string             `json:"name,omitempty" bson:"name,omitempty"`
+	Group         string             `json:"group,omitempty" bson:"group,omitempty"`
+	Serving       int                `json:"serving,omitempty" bson:"serving,omitempty"`
+	Nutrition     NutritionSummary   `json:"nutrition,omitempty" bson:"nutrition,omitempty"`         // based on serving size
+	USDANutrition NutritionSummary   `json:"usdaNutrition,omitempty" bson:"usdaNutrition,omitempty"` // source of truth, based on nutrients / 100 g
 }
 
 type Meal struct {

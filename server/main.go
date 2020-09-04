@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	log.Println("Day Service start")
+	log.Println("refactored spoon server start")
 
 	router := mux.NewRouter().StrictSlash(true)
 
