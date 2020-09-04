@@ -18,94 +18,93 @@ const (
 )
 
 type FoodSearchRequest struct {
-	Food     string
-	PageSize string
+	Food     string `json:"food,omitempty"`
+	PageSize string `json:"pageSize,omitempty"`
 }
 
 type FoodSearchCriteria struct {
-	GeneralSearchInput string
-	PageNumber         int
-	RequireAllWords    bool
+	GeneralSearchInput string `json:"generalSearchInput,omitempty"`
+	PageNumber         int    `json:"pageNumber,omitempty"`
+	RequireAllWords    bool   `json:"requireAllWords,omitempty"`
 }
 
 type UsdaFood struct {
-	FdcId       int
-	Description string
-	BrandOwner  string
-	Ingredients string
+	FdcId       int    `json:"fdcId,omitempty"`
+	Description string `json:"description,omitempty"`
+	BrandOwner  string `json:"brandOwner,omitempty"`
+	Ingredients string `json:"ingredients,omitempty"`
 }
 
 type FoodSearchResult struct {
-	FoodSearchCriteria FoodSearchCriteria
-	CurrentPage        int
-	TotalPages         int
-	Foods              []UsdaFood
+	FoodSearchCriteria FoodSearchCriteria `json:"foodSearchCriteria,omitempty"`
+	CurrentPage        int                `json:"currentPage,omitempty"`
+	TotalPages         int                `json:"totalPages,omitempty"`
+	Foods              []UsdaFood         `json:"foods,omitempty"`
 }
 
 type FoodDetailRequest struct {
-	Food int
+	Food int `json:"food,omitempty"`
 }
 
 type FoodsDetailRequest struct {
-	Foods []int
+	Foods []int `json:"foods,omitempty"`
 }
 
 type LabelNutrient struct {
-	Value float64
+	Value float64 `json:"value,omitempty"`
 }
 
-type LabelNutrients struct {
-	Fat           LabelNutrient
-	SaturatedFat  LabelNutrient
-	TransFat      LabelNutrient
-	Cholesterol   LabelNutrient
-	Sodium        LabelNutrient
-	Carbohydrates LabelNutrient
-	Fiber         LabelNutrient
-	Sugars        LabelNutrient
-	Protein       LabelNutrient
-	Calcium       LabelNutrient
-	Iron          LabelNutrient
-	Calories      LabelNutrient
-}
+// type LabelNutrients struct {
+// 	Fat           LabelNutrient `json:"fat,omitempty"`
+// 	SaturatedFat  LabelNutrient `json:"saturatedFat,omitempty"`
+// 	TransFat      LabelNutrient `json:"transFat,omitempty"`
+// 	Cholesterol   LabelNutrient `json:"cholesterol,omitempty"`
+// 	Sodium        LabelNutrient `json:"sodium,omitempty"`
+// 	Carbohydrates LabelNutrient `json:"carbohydrates,omitempty"`
+// 	Fiber         LabelNutrient `json:"fiber,omitempty"`
+// 	Sugars        LabelNutrient `json:"sugars,omitempty"`
+// 	Protein       LabelNutrient `json:"protein,omitempty"`
+// 	Calcium       LabelNutrient `json:"calcium,omitempty"`
+// 	Iron          LabelNutrient `json:"iron,omitempty"`
+// 	Calories      LabelNutrient `json:"calories,omitempty"`
+// }
 
 type Nutrient struct {
-	Id       int
-	Number   string
-	Name     string
-	Rank     int
-	UnitName string
+	Id       int    `json:"id,omitempty"`
+	Number   string `json:"number,omitempty"`
+	Name     string `json:"name,omitempty"`
+	Rank     int    `json:"rank,omitempty"`
+	UnitName string `json:"unitName,omitempty"`
 }
 
 type FoodNutrientDerivation struct {
-	Id                 int
-	Code               string
-	Description        string
-	FoodNutrientSource FoodNutrientSource
+	Id                 int                `json:"id,omitempty"`
+	Code               string             `json:"code,omitempty"`
+	Description        string             `json:"description,omitempty"`
+	FoodNutrientSource FoodNutrientSource `json:"foodNutrientSource,omitempty"`
 }
 
 type FoodNutrientSource struct {
-	Id          int
-	Code        string
-	Description string
+	Id          int    `json:"id,omitempty"`
+	Code        string `json:"code,omitempty"`
+	Description string `json:"description,omitempty"`
 }
 
 type FoodNutrient struct {
-	Type     string
-	Id       int
-	Nutrient Nutrient
-	Amount   float64
+	Type     string   `json:"type,omitempty"`
+	Id       int      `json:"id,omitempty"`
+	Nutrient Nutrient `json:"nutrient,omitempty"`
+	Amount   float64  `json:"amount,omitempty"`
 }
 
 type FoodDetailResult struct {
-	FdcId           int
-	FoodClass       string
-	Description     string
-	Ingredients     string
-	ServingSize     float64
-	ServingSizeUnit string
-	// LabelNutrients  LabelNutrients
-	FoodNutrients []FoodNutrient
+	FdcId           int            `json:"fdcId,omitempty"`
+	FoodClass       string         `json:"foodClass,omitempty"`
+	Description     string         `json:"description,omitempty"`
+	Ingredients     string         `json:"ingredients,omitempty"`
+	ServingSize     float64        `json:"servingSize,omitempty"`
+	ServingSizeUnit string         `json:"servingSizeUnit,omitempty"`
+	FoodNutrients   []FoodNutrient `json:"foodNutrients,omitempty"`
 }
 
 func main() {

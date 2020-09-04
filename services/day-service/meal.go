@@ -39,6 +39,8 @@ func MealHandler(w http.ResponseWriter, r *http.Request) {
 	mealObjectID, err := primitive.ObjectIDFromHex(mealID)
 	if err != nil {
 		log.Println("aiya invalid meal ID")
+		log.Println(mealID)
+		return
 	}
 
 	collection := lib.GetCollection("Days")
@@ -47,18 +49,59 @@ func MealHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodDelete:
 		deleteMeal(w, r, collection, userID, date, mealObjectID)
-		// case http.MethodPut:
-		// 	updateMeal(w, r, collection, userID, date, mealObjectID)
+	case http.MethodPut:
+		updateMeal(w, r, collection, userID, date, mealObjectID)
 	}
 }
 
-// func updateMeal(w http.ResponseWriter, r *http.Request, collection *mongo.Collection, userID string, date string, mealID primitive.ObjectID) {
-// collection.UpdateOne(
-// 	context.Background(),
-// 	bson.M{"user": userID, "date": date, "meals": bson.M{"$elemMatch": bson.M{"_id": mealID}}},
-// 	bson.M{"$set": bson.M{"name": dayRecord.Nutrition.Calories - mealToDelete.Nutrition.Calories}},
-// )
-// }
+func updateMeal(w http.ResponseWriter, r *http.Request, collection *mongo.Collection, userID string, date string, mealID primitive.ObjectID) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	decoder := json.NewDecoder(r.Body)
+	var meal Meal
+	err := decoder.Decode(&meal)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("could not decode post meal request:\n" + err.Error()))
+		return
+	}
+
+	for i, _ := range meal.Foods {
+		if meal.Foods[i].ID == primitive.NilObjectID {
+			meal.Foods[i].ID = primitive.NewObjectID()
+		}
+	}
+
+	dayRecord := GetDayByDate(ctx, collection, userID, date)
+	meals := dayRecord.Meals
+	var deleteIdx int
+	for i, _ := range meals {
+		if meals[i].ID == mealID {
+			deleteIdx = i
+			break
+		}
+	}
+
+	deleteCals := meals[deleteIdx].Nutrition.Calories
+
+	meals[deleteIdx] = meal
+
+	_, err = collection.UpdateOne(
+		ctx,
+		bson.M{"user": userID, "date": date},
+		bson.M{
+			"$set": bson.M{"nutrition.calories": dayRecord.Nutrition.Calories - deleteCals + meal.Nutrition.Calories, "meals": meals},
+		},
+	)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("unable to add meal into day collection:\n" + err.Error()))
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+}
 
 func deleteMeal(w http.ResponseWriter, r *http.Request, collection *mongo.Collection, userID string, date string, mealID primitive.ObjectID) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
