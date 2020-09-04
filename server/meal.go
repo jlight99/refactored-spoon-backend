@@ -7,11 +7,10 @@ import (
 	"net/http"
 	"time"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
-
 	"github.com/gorilla/mux"
 	"github.com/refactored-spoon-backend/lib"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -205,8 +204,4 @@ func postMeal(w http.ResponseWriter, r *http.Request, collection *mongo.Collecti
 
 	w.WriteHeader(http.StatusCreated)
 	// w.Write([]byte(res.InsertedID.(primitive.ObjectID).Hex()))
-}
-
-func deleteMeals(w http.ResponseWriter, r *http.Request, collection *mongo.Collection, userID string, date string) {
-
 }
