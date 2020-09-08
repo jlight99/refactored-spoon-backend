@@ -4,12 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/refactored-spoon-backend/lib"
+	"github.com/refactored-spoon-backend/src/lib"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -36,7 +35,7 @@ func MealHandler(w http.ResponseWriter, r *http.Request) {
 	mealID := vars["mealId"]
 	mealObjectID, err := primitive.ObjectIDFromHex(mealID)
 	if err != nil {
-		log.Println("error: invalid meal ID provided: " + mealID)
+		fmt.Println("error: invalid meal ID provided: " + mealID)
 		return
 	}
 
@@ -59,6 +58,7 @@ func updateMeal(w http.ResponseWriter, r *http.Request, collection *mongo.Collec
 	var meal Meal
 	err := decoder.Decode(&meal)
 	if err != nil {
+		fmt.Println("could not decode post meal request:\n" + err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("could not decode post meal request:\n" + err.Error()))
 		return
@@ -92,6 +92,7 @@ func updateMeal(w http.ResponseWriter, r *http.Request, collection *mongo.Collec
 		},
 	)
 	if err != nil {
+		fmt.Println("unable to add meal into day collection:\n" + err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("unable to add meal into day collection:\n" + err.Error()))
 		return

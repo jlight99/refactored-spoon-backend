@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/refactored-spoon-backend/lib"
+	"github.com/refactored-spoon-backend/src/lib"
 )
 
 func main() {

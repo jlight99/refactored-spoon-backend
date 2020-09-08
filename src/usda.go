@@ -5,13 +5,18 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 )
 
 const (
-	apiKey                      = "EH6jWPD9LdlAPYrnQzR4luccqsnhUBwSd99kwocV"
 	usdaFoodDataCentralEndpoint = "https://api.nal.usda.gov/fdc/v1/"
+)
+
+var (
+	// apiKey = os.Getenv("USDA_API_KEY")
+	apiKey = "EH6jWPD9LdlAPYrnQzR4luccqsnhUBwSd99kwocV"
 )
 
 type FoodSearchRequest struct {
@@ -105,6 +110,8 @@ type FoodDetailResult struct {
 }
 
 func SearchFood(w http.ResponseWriter, r *http.Request) {
+	os.Setenv("USDA_API_KEY", "EH6jWPD9LdlAPYrnQzR4luccqsnhUBwSd99kwocV")
+
 	client := &http.Client{}
 
 	decoder := json.NewDecoder(r.Body)
@@ -152,6 +159,8 @@ func SearchFood(w http.ResponseWriter, r *http.Request) {
 }
 
 func FoodDetail(w http.ResponseWriter, r *http.Request) {
+	os.Setenv("USDA_API_KEY", "EH6jWPD9LdlAPYrnQzR4luccqsnhUBwSd99kwocV")
+
 	client := &http.Client{}
 
 	decoder := json.NewDecoder(r.Body)
@@ -196,6 +205,8 @@ func FoodDetail(w http.ResponseWriter, r *http.Request) {
 }
 
 func FoodsDetail(w http.ResponseWriter, r *http.Request) {
+	os.Setenv("USDA_API_KEY", "EH6jWPD9LdlAPYrnQzR4luccqsnhUBwSd99kwocV")
+
 	client := &http.Client{}
 
 	decoder := json.NewDecoder(r.Body)
