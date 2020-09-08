@@ -15,8 +15,7 @@ const (
 )
 
 var (
-	// apiKey = os.Getenv("USDA_API_KEY")
-	apiKey = "EH6jWPD9LdlAPYrnQzR4luccqsnhUBwSd99kwocV"
+	apiKey = os.Getenv("USDA_API_KEY")
 )
 
 type FoodSearchRequest struct {
@@ -110,8 +109,6 @@ type FoodDetailResult struct {
 }
 
 func SearchFood(w http.ResponseWriter, r *http.Request) {
-	os.Setenv("USDA_API_KEY", "EH6jWPD9LdlAPYrnQzR4luccqsnhUBwSd99kwocV")
-
 	client := &http.Client{}
 
 	decoder := json.NewDecoder(r.Body)
@@ -159,8 +156,6 @@ func SearchFood(w http.ResponseWriter, r *http.Request) {
 }
 
 func FoodDetail(w http.ResponseWriter, r *http.Request) {
-	os.Setenv("USDA_API_KEY", "EH6jWPD9LdlAPYrnQzR4luccqsnhUBwSd99kwocV")
-
 	client := &http.Client{}
 
 	decoder := json.NewDecoder(r.Body)
@@ -205,8 +200,6 @@ func FoodDetail(w http.ResponseWriter, r *http.Request) {
 }
 
 func FoodsDetail(w http.ResponseWriter, r *http.Request) {
-	os.Setenv("USDA_API_KEY", "EH6jWPD9LdlAPYrnQzR4luccqsnhUBwSd99kwocV")
-
 	client := &http.Client{}
 
 	decoder := json.NewDecoder(r.Body)
@@ -227,7 +220,6 @@ func FoodsDetail(w http.ResponseWriter, r *http.Request) {
 	fdcIds = strings.TrimSuffix(fdcIds, ",")
 
 	req, err := http.NewRequest(http.MethodGet, usdaFoodDataCentralEndpoint+"foods?api_key="+apiKey+"&fdcIds="+fdcIds, nil)
-	// req, err := http.NewRequest(http.MethodGet, usdaFoodDataCentralEndpoint+strconv.Itoa(queryStr.Food)+"?api_key="+apiKey, nil)
 	if err != nil {
 		log.Println(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
