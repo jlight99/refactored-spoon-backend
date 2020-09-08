@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/gorilla/mux"
 	"github.com/refactored-spoon-backend/internal/lib"
@@ -19,7 +20,13 @@ func main() {
 
 	router.Use(mux.CORSMethodMiddleware(router))
 
-	log.Fatal(http.ListenAndServe(":8081", router))
+	port := os.Getenv("PORT")
+	if len(port) == 0 {
+		port = "8081"
+	}
+
+	log.Fatal(http.ListenAndServe(":"+port, router))
+	log.Println("refactored spoon server start on port " + port)
 }
 
 func handleDayRequests(router *mux.Router) {
