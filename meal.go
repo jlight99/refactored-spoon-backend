@@ -193,7 +193,7 @@ func postMeal(w http.ResponseWriter, r *http.Request, collection *mongo.Collecti
 		}
 	}
 
-	nutrition := updateNutrition(NutritionSummary{}, meal.Nutrition, 1)
+	nutrition := updateNutrition(dayRecord.Nutrition, meal.Nutrition, 1)
 
 	_, err = collection.UpdateOne(
 		ctx,
