@@ -25,10 +25,7 @@ func main() {
 		port = "8081"
 	}
 
-	log.Println("port: " + port)
-
 	log.Fatal(http.ListenAndServe(":"+port, router))
-	log.Println("refactored spoon server start on port " + port)
 }
 
 func handleDayRequests(router *mux.Router) {
