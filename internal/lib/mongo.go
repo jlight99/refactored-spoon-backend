@@ -10,7 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-const (
+var (
 	dbConnStr = os.Getenv("DB_CONN_STR")
 )
 
