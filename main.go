@@ -38,6 +38,10 @@ func handleDayRequests(router *mux.Router) {
 func handleUserRequests(router *mux.Router) {
 	router.Handle("/signup", lib.CorsMiddleware(http.HandlerFunc(Signup))).Methods(http.MethodPost, http.MethodOptions)
 	router.Handle("/login", lib.CorsMiddleware(http.HandlerFunc(Login))).Methods(http.MethodPost, http.MethodOptions)
+	router.HandleFunc("/callback", HandleGoogleCallback)
+	router.HandleFunc("/", HandleMain)
+	router.HandleFunc("/google-login", HandleGoogleLogin)
+
 }
 
 func handleUSDARequests(router *mux.Router) {
