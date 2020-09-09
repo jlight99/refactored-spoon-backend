@@ -15,10 +15,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-const (
-	dateLayout = "2020-01-12"
-)
-
 type NutritionSummary struct {
 	Calories    int     `json:"calories,omitempty" bson:"calories,omitempty"`
 	Protein     float64 `json:"protein,omitempty" bson:"protein,omitempty"`
@@ -186,13 +182,13 @@ func deleteDay(w http.ResponseWriter, r *http.Request, collection *mongo.Collect
 
 func sortMeals(meals []Meal) {
 	sort.Slice(meals, func(i, j int) bool {
-		if meals[i].Name == "dinner" || meals[j].Name == "breakfast" {
+		if meals[i].Name == "Dinner" || meals[j].Name == "Breakfast" {
 			return false
 		}
-		if meals[i].Name == "breakfast" || meals[j].Name == "dinner" {
+		if meals[i].Name == "Breakfast" || meals[j].Name == "Dinner" {
 			return true
 		}
-		if meals[i].Name == "lunch" && meals[j].Name == "dinner" {
+		if meals[i].Name == "Lunch" && meals[j].Name == "Dinner" {
 			return true
 		}
 		return false

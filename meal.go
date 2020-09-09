@@ -80,7 +80,9 @@ func updateMeal(w http.ResponseWriter, r *http.Request, collection *mongo.Collec
 		}
 	}
 
-	deleteCals := meals[deleteIdx].Nutrition.Calories
+	// replace original meal's nutrition with the updated meal's nutrition in the total day nutrition
+	nutrition := updateNutrition(dayRecord.Nutrition, meals[deleteIdx].Nutrition, -1)
+	nutrition = updateNutrition(nutrition, meal.Nutrition, 1)
 
 	meals[deleteIdx] = meal
 
@@ -88,7 +90,7 @@ func updateMeal(w http.ResponseWriter, r *http.Request, collection *mongo.Collec
 		ctx,
 		bson.M{"user": userID, "date": date},
 		bson.M{
-			"$set": bson.M{"nutrition.calories": dayRecord.Nutrition.Calories - deleteCals + meal.Nutrition.Calories, "meals": meals},
+			"$set": bson.M{"nutrition": nutrition, "meals": meals},
 		},
 	)
 	if err != nil {
@@ -113,11 +115,12 @@ func deleteMeal(w http.ResponseWriter, r *http.Request, collection *mongo.Collec
 			break
 		}
 	}
+
 	collection.UpdateOne(
 		ctx,
 		bson.M{"user": userID, "date": date, "meals": bson.M{"$elemMatch": bson.M{"_id": mealID}}},
 		bson.M{
-			"$set":  bson.M{"nutrition.calories": dayRecord.Nutrition.Calories - mealToDelete.Nutrition.Calories},
+			"$set":  bson.M{"nutrition": updateNutrition(dayRecord.Nutrition, mealToDelete.Nutrition, -1)},
 			"$pull": bson.M{"meals": mealToDelete},
 		},
 	)
@@ -175,12 +178,10 @@ func postMeal(w http.ResponseWriter, r *http.Request, collection *mongo.Collecti
 	dayRecord := GetDayByDate(ctx, collection, userID, date)
 	if dayRecord.ID == primitive.NilObjectID {
 		dayRecord = &DayRecord{
-			Date:  date,
-			User:  userID,
-			Meals: []Meal{},
-			Nutrition: NutritionSummary{
-				Calories: 0,
-			},
+			Date:      date,
+			User:      userID,
+			Meals:     []Meal{},
+			Nutrition: NutritionSummary{},
 		}
 		_, err := collection.InsertOne(ctx, dayRecord)
 		if err != nil {
@@ -192,20 +193,7 @@ func postMeal(w http.ResponseWriter, r *http.Request, collection *mongo.Collecti
 		}
 	}
 
-	nutrition := dayRecord.Nutrition
-	nutrition.Calories += meal.Nutrition.Calories
-	nutrition.Protein += meal.Nutrition.Protein
-	nutrition.Carbs += meal.Nutrition.Carbs
-	nutrition.Fat += meal.Nutrition.Fat
-	nutrition.Sugar += meal.Nutrition.Sugar
-	nutrition.Fiber += meal.Nutrition.Fiber
-	nutrition.Sodium += meal.Nutrition.Sodium
-	nutrition.Calcium += meal.Nutrition.Calcium
-	nutrition.Iron += meal.Nutrition.Iron
-	nutrition.Cholesterol += meal.Nutrition.Cholesterol
-	nutrition.Potassium += meal.Nutrition.Potassium
-	nutrition.VitaminA += meal.Nutrition.VitaminA
-	nutrition.VitaminC += meal.Nutrition.VitaminC
+	nutrition := updateNutrition(NutritionSummary{}, meal.Nutrition, 1)
 
 	_, err = collection.UpdateOne(
 		ctx,
@@ -224,4 +212,23 @@ func postMeal(w http.ResponseWriter, r *http.Request, collection *mongo.Collecti
 	}
 
 	w.WriteHeader(http.StatusCreated)
+}
+
+func updateNutrition(dayNutrition NutritionSummary, mealNutrition NutritionSummary, sign int) NutritionSummary {
+	floatSign := float64(sign) // some of the nutrients are ints while others are float64s
+	nutrition := dayNutrition
+	nutrition.Calories += sign * mealNutrition.Calories
+	nutrition.Protein += floatSign * mealNutrition.Protein
+	nutrition.Carbs += floatSign * mealNutrition.Carbs
+	nutrition.Fat += floatSign * mealNutrition.Fat
+	nutrition.Sugar += floatSign * mealNutrition.Sugar
+	nutrition.Fiber += floatSign * mealNutrition.Fiber
+	nutrition.Sodium += sign * mealNutrition.Sodium
+	nutrition.Calcium += sign * mealNutrition.Calcium
+	nutrition.Iron += floatSign * mealNutrition.Iron
+	nutrition.Cholesterol += sign * mealNutrition.Cholesterol
+	nutrition.Potassium += sign * mealNutrition.Potassium
+	nutrition.VitaminA += floatSign * mealNutrition.VitaminA
+	nutrition.VitaminC += floatSign * mealNutrition.VitaminC
+	return nutrition
 }

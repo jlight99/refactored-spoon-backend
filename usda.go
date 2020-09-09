@@ -51,25 +51,6 @@ type FoodsDetailRequest struct {
 	Foods []int `json:"foods,omitempty"`
 }
 
-type LabelNutrient struct {
-	Value float64 `json:"value,omitempty"`
-}
-
-// type LabelNutrients struct {
-// 	Fat           LabelNutrient `json:"fat,omitempty"`
-// 	SaturatedFat  LabelNutrient `json:"saturatedFat,omitempty"`
-// 	TransFat      LabelNutrient `json:"transFat,omitempty"`
-// 	Cholesterol   LabelNutrient `json:"cholesterol,omitempty"`
-// 	Sodium        LabelNutrient `json:"sodium,omitempty"`
-// 	Carbohydrates LabelNutrient `json:"carbohydrates,omitempty"`
-// 	Fiber         LabelNutrient `json:"fiber,omitempty"`
-// 	Sugars        LabelNutrient `json:"sugars,omitempty"`
-// 	Protein       LabelNutrient `json:"protein,omitempty"`
-// 	Calcium       LabelNutrient `json:"calcium,omitempty"`
-// 	Iron          LabelNutrient `json:"iron,omitempty"`
-// 	Calories      LabelNutrient `json:"calories,omitempty"`
-// }
-
 type Nutrient struct {
 	Id       int    `json:"id,omitempty"`
 	Number   string `json:"number,omitempty"`

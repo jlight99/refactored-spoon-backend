@@ -3,6 +3,7 @@ package lib
 import (
 	"context"
 	"log"
+	"os"
 	"time"
 
 	"go.mongodb.org/mongo-driver/mongo"
@@ -10,7 +11,7 @@ import (
 )
 
 const (
-	dbConnStr = "mongodb+srv://ellen:creepy-elysium-just-like-THIS09@cluster0.wmwca.mongodb.net/refactored_spoon_db?retryWrites=true&w=majority"
+	dbConnStr = os.Getenv("DB_CONN_STR")
 )
 
 func GetCollection(collectionName string) *mongo.Collection {
