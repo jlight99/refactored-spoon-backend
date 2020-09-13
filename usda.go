@@ -18,14 +18,10 @@ var (
 	apiKey = os.Getenv("USDA_API_KEY")
 )
 
-type FoodSearchRequest struct {
-	Food     string `json:"food,omitempty"`
-	PageSize string `json:"pageSize,omitempty"`
-}
-
 type FoodSearchCriteria struct {
 	GeneralSearchInput string `json:"generalSearchInput,omitempty"`
 	PageNumber         int    `json:"pageNumber,omitempty"`
+	PageSize           int    `json:"pageSize,omitempty"`
 	RequireAllWords    bool   `json:"requireAllWords,omitempty"`
 }
 
@@ -93,8 +89,8 @@ func SearchFood(w http.ResponseWriter, r *http.Request) {
 	client := &http.Client{}
 
 	decoder := json.NewDecoder(r.Body)
-	var queryStr FoodSearchRequest
-	err := decoder.Decode(&queryStr)
+	var foodSearchCriteria FoodSearchCriteria
+	err := decoder.Decode(&foodSearchCriteria)
 	if err != nil {
 		log.Println(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
@@ -102,9 +98,13 @@ func SearchFood(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	searchReqBody := []byte(`{"generalSearchInput":"` + queryStr.Food + `", "pageSize":` + queryStr.PageSize + `}`)
+	foodSearchCriteriaJSON, err := json.Marshal(foodSearchCriteria)
+	if err != nil {
+		log.Println(err.Error())
+		return
+	}
 
-	req, err := http.NewRequest(http.MethodPost, usdaFoodDataCentralEndpoint+"search?api_key="+apiKey, bytes.NewBuffer(searchReqBody))
+	req, err := http.NewRequest(http.MethodPost, usdaFoodDataCentralEndpoint+"search?api_key="+apiKey, bytes.NewBuffer(foodSearchCriteriaJSON))
 	if err != nil {
 		log.Println(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
@@ -133,7 +133,7 @@ func SearchFood(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(searchResults.Foods)
+	json.NewEncoder(w).Encode(searchResults)
 }
 
 func FoodDetail(w http.ResponseWriter, r *http.Request) {
