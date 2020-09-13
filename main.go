@@ -17,6 +17,7 @@ func main() {
 	handleDayRequests(router)
 	handleUserRequests(router)
 	handleUSDARequests(router)
+	handleCounterRequests(router)
 
 	router.Use(mux.CORSMethodMiddleware(router))
 
@@ -38,14 +39,15 @@ func handleDayRequests(router *mux.Router) {
 func handleUserRequests(router *mux.Router) {
 	router.Handle("/signup", lib.CorsMiddleware(http.HandlerFunc(Signup))).Methods(http.MethodPost, http.MethodOptions)
 	router.Handle("/login", lib.CorsMiddleware(http.HandlerFunc(Login))).Methods(http.MethodPost, http.MethodOptions)
-	router.HandleFunc("/callback", HandleGoogleCallback)
-	router.HandleFunc("/", HandleMain)
-	router.HandleFunc("/google-login", HandleGoogleLogin)
-
 }
 
 func handleUSDARequests(router *mux.Router) {
 	router.Handle("/food/search", lib.CorsMiddleware(http.HandlerFunc(SearchFood))).Methods(http.MethodPost, http.MethodOptions)
 	router.Handle("/food/detail", lib.CorsMiddleware(http.HandlerFunc(FoodDetail))).Methods(http.MethodPost, http.MethodOptions)
 	router.Handle("/foods/detail", lib.CorsMiddleware(http.HandlerFunc(FoodsDetail))).Methods(http.MethodPost, http.MethodOptions)
+}
+
+func handleCounterRequests(router *mux.Router) {
+	router.Handle("/counters", lib.CorsMiddleware(http.HandlerFunc(CountersHandler))).Methods(http.MethodPost, http.MethodGet, http.MethodOptions)
+	router.Handle("/counters/{name}", lib.CorsMiddleware(http.HandlerFunc(CounterHandler))).Methods(http.MethodPut, http.MethodGet, http.MethodOptions)
 }
