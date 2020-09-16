@@ -20,8 +20,6 @@ func main() {
 	handleUSDARequests(router)
 	handleCounterRequests(router)
 
-	router.Use(mux.CORSMethodMiddleware(router))
-
 	port := os.Getenv("PORT")
 	if len(port) == 0 {
 		port = "8081"
@@ -29,7 +27,7 @@ func main() {
 
 	server := &http.Server{
 		Handler:      router,
-		Addr:         "127.0.0.1:" + port,
+		Addr:         ":" + port,
 		WriteTimeout: 8 * time.Second,
 		ReadTimeout:  8 * time.Second,
 	}
