@@ -16,19 +16,25 @@ import (
 )
 
 type NutritionSummary struct {
-	Calories    int     `json:"calories,omitempty" bson:"calories,omitempty"`
-	Protein     float64 `json:"protein,omitempty" bson:"protein,omitempty"`
-	Carbs       float64 `json:"carbs,omitempty" bson:"carbs,omitempty"`
-	Fat         float64 `json:"fat,omitempty" bson:"fat,omitempty"`
-	Sugar       float64 `json:"sugar,omitempty" bson:"sugar,omitempty"`
-	Fiber       float64 `json:"fiber,omitempty" bson:"fiber,omitempty"`
-	Sodium      int     `json:"sodium,omitempty" bson:"sodium,omitempty"`
-	Calcium     int     `json:"calcium,omitempty" bson:"calcium,omitempty"`
-	Iron        float64 `json:"iron,omitempty" bson:"iron,omitempty"`
-	Cholesterol int     `json:"cholesterol,omitempty" bson:"cholesterol,omitempty"`
-	Potassium   int     `json:"potassium,omitempty" bson:"potassium,omitempty"`
-	VitaminA    float64 `json:"vitaminA,omitempty" bson:"vitaminA,omitempty"`
-	VitaminC    float64 `json:"vitaminC,omitempty" bson:"vitaminC,omitempty"`
+	Calories    Nutrient `json:"calories,omitempty" bson:"calories,omitempty"`
+	Protein     Nutrient `json:"protein,omitempty" bson:"protein,omitempty"`
+	Carbs       Nutrient `json:"carbs,omitempty" bson:"carbs,omitempty"`
+	Fat         Nutrient `json:"fat,omitempty" bson:"fat,omitempty"`
+	Sugar       Nutrient `json:"sugar,omitempty" bson:"sugar,omitempty"`
+	Fiber       Nutrient `json:"fiber,omitempty" bson:"fiber,omitempty"`
+	Sodium      Nutrient `json:"sodium,omitempty" bson:"sodium,omitempty"`
+	Calcium     Nutrient `json:"calcium,omitempty" bson:"calcium,omitempty"`
+	Iron        Nutrient `json:"iron,omitempty" bson:"iron,omitempty"`
+	Cholesterol Nutrient `json:"cholesterol,omitempty" bson:"cholesterol,omitempty"`
+	Potassium   Nutrient `json:"potassium,omitempty" bson:"potassium,omitempty"`
+	VitaminA    Nutrient `json:"vitaminA,omitempty" bson:"vitaminA,omitempty"`
+	VitaminC    Nutrient `json:"vitaminC,omitempty" bson:"vitaminC,omitempty"`
+}
+
+type Nutrient struct {
+	NutrientName string  `json:"nutrientName,omitempty" bson:"nutrientName,omitempty"`
+	UnitName     string  `json:"unitName,omitempty" bson:"unitName,omitempty"`
+	Value        float64 `json:"value,omitempty" bson:"value,omitempty"`
 }
 
 type Food struct {
@@ -50,18 +56,14 @@ type Meal struct {
 type DayRecord struct {
 	ID        primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
 	Date      string             `json:"date,omitempty" bson:"date,omitempty"`
-	User      string             `json:"user,omitempty" bson:"user,omitempty"`
+	UserID    string             `json:"userId,omitempty" bson:"userId,omitempty"`
 	Meals     []Meal             `json:"meals,omitempty" bson:"meals,omitempty"`
 	Nutrition NutritionSummary   `json:"nutrition,omitempty" bson:"nutrition,omitempty"`
 }
 
-type getDayReq struct {
-	User string
-}
-
 func DaysHandler(w http.ResponseWriter, r *http.Request) {
 	collection := lib.GetCollection("Days")
-	userID := r.URL.Query().Get("user")
+	userID := r.URL.Query().Get("userId")
 
 	switch r.Method {
 	case http.MethodGet:
@@ -76,7 +78,7 @@ func DayHandler(w http.ResponseWriter, r *http.Request) {
 	date := vars["date"]
 
 	collection := lib.GetCollection("Days")
-	userID := r.URL.Query().Get("user")
+	userID := r.URL.Query().Get("userId")
 
 	switch r.Method {
 	case http.MethodGet:
@@ -90,7 +92,7 @@ func getDays(w http.ResponseWriter, r *http.Request, collection *mongo.Collectio
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	cur, err := collection.Find(ctx, bson.M{"user": userID})
+	cur, err := collection.Find(ctx, bson.M{"userId": userID})
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("could not find day results:\n" + err.Error()))
@@ -153,9 +155,9 @@ func postDays(w http.ResponseWriter, r *http.Request, collection *mongo.Collecti
 
 func GetDayByDate(ctx context.Context, collection *mongo.Collection, userID string, date string) *DayRecord {
 	var dayRecord DayRecord
-	err := collection.FindOne(ctx, bson.M{"user": userID, "date": date}).Decode(&dayRecord)
+	err := collection.FindOne(ctx, bson.M{"userId": userID, "date": date}).Decode(&dayRecord)
 	if err != nil {
-		log.Println("error in finding day with user: " + userID + " date: " + date)
+		log.Println("error in finding day with userId: " + userID + " date: " + date)
 		log.Println(err)
 		return &DayRecord{}
 	}
@@ -177,7 +179,7 @@ func deleteDay(w http.ResponseWriter, r *http.Request, collection *mongo.Collect
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	collection.FindOneAndDelete(ctx, bson.M{"user": userID, "date": date})
+	collection.FindOneAndDelete(ctx, bson.M{"userId": userID, "date": date})
 }
 
 func sortMeals(meals []Meal) {

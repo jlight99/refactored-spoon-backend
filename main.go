@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/refactored-spoon-backend/internal/lib"
@@ -26,7 +27,14 @@ func main() {
 		port = "8081"
 	}
 
-	log.Fatal(http.ListenAndServe(":"+port, router))
+	server := &http.Server{
+		Handler:      router,
+		Addr:         "127.0.0.1:" + port,
+		WriteTimeout: 8 * time.Second,
+		ReadTimeout:  8 * time.Second,
+	}
+
+	log.Fatal(server.ListenAndServe())
 }
 
 func handleDayRequests(router *mux.Router) {

@@ -26,10 +26,18 @@ type FoodSearchCriteria struct {
 }
 
 type UsdaFood struct {
-	FdcId       int    `json:"fdcId,omitempty"`
-	Description string `json:"description,omitempty"`
-	BrandOwner  string `json:"brandOwner,omitempty"`
-	Ingredients string `json:"ingredients,omitempty"`
+	FdcId         int                    `json:"fdcId,omitempty"`
+	Description   string                 `json:"description,omitempty"`
+	BrandOwner    string                 `json:"brandOwner,omitempty"`
+	Ingredients   string                 `json:"ingredients,omitempty"`
+	FoodNutrients []AbridgedFoodNutrient `json:"foodNutrients,omitempty"`
+}
+
+type AbridgedFoodNutrient struct {
+	NutrientId   int     `json:"nutrientId,omitempty"`
+	NutrientName string  `json:"nutrientName,omitempty"`
+	UnitName     string  `json:"unitName,omitempty"`
+	Value        float64 `json:"value,omitempty"`
 }
 
 type FoodSearchResult struct {
@@ -39,40 +47,14 @@ type FoodSearchResult struct {
 	Foods              []UsdaFood         `json:"foods,omitempty"`
 }
 
+// Food Details (/v1/foods) (currently only /v1/search endpoint is being used)
+
 type FoodDetailRequest struct {
 	Food int `json:"food,omitempty"`
 }
 
 type FoodsDetailRequest struct {
 	Foods []int `json:"foods,omitempty"`
-}
-
-type Nutrient struct {
-	Id       int    `json:"id,omitempty"`
-	Number   string `json:"number,omitempty"`
-	Name     string `json:"name,omitempty"`
-	Rank     int    `json:"rank,omitempty"`
-	UnitName string `json:"unitName,omitempty"`
-}
-
-type FoodNutrientDerivation struct {
-	Id                 int                `json:"id,omitempty"`
-	Code               string             `json:"code,omitempty"`
-	Description        string             `json:"description,omitempty"`
-	FoodNutrientSource FoodNutrientSource `json:"foodNutrientSource,omitempty"`
-}
-
-type FoodNutrientSource struct {
-	Id          int    `json:"id,omitempty"`
-	Code        string `json:"code,omitempty"`
-	Description string `json:"description,omitempty"`
-}
-
-type FoodNutrient struct {
-	Type     string   `json:"type,omitempty"`
-	Id       int      `json:"id,omitempty"`
-	Nutrient Nutrient `json:"nutrient,omitempty"`
-	Amount   float64  `json:"amount,omitempty"`
 }
 
 type FoodDetailResult struct {
@@ -84,6 +66,23 @@ type FoodDetailResult struct {
 	ServingSizeUnit string         `json:"servingSizeUnit,omitempty"`
 	FoodNutrients   []FoodNutrient `json:"foodNutrients,omitempty"`
 }
+
+type FoodNutrient struct {
+	Type     string       `json:"type,omitempty"`
+	Id       int          `json:"id,omitempty"`
+	Nutrient USDANutrient `json:"nutrient,omitempty"`
+	Amount   float64      `json:"amount,omitempty"`
+}
+
+type USDANutrient struct {
+	Id       int    `json:"id,omitempty"`
+	Number   string `json:"number,omitempty"`
+	Name     string `json:"name,omitempty"`
+	Rank     int    `json:"rank,omitempty"`
+	UnitName string `json:"unitName,omitempty"`
+}
+
+// End of Food Details
 
 func SearchFood(w http.ResponseWriter, r *http.Request) {
 	client := &http.Client{}
