@@ -10,8 +10,7 @@ import (
 )
 
 var (
-	// dbConnStr = os.Getenv("DB_CONN_STR")
-	dbConnStr = "mongodb+srv://refactored-spoon-user:zat'sSOfrieeeeeeed?!@cluster0.wmwca.mongodb.net/refactored_spoon_db?retryWrites=true&w=majority"
+	dbConnStr = os.Getenv("DB_CONN_STR")
 )
 
 // GetCollection returns a MongoDB collection given the collection name

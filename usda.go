@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 )
@@ -14,8 +15,7 @@ const (
 )
 
 var (
-	// apiKey = os.Getenv("USDA_API_KEY")
-	apiKey = "EH6jWPD9LdlAPYrnQzR4luccqsnhUBwSd99kwocV"
+	apiKey = os.Getenv("USDA_API_KEY")
 )
 
 // FoodSearchCriteria is the body for the USDA POST /search request
