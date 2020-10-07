@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"os"
 	"strconv"
 	"strings"
 )
@@ -15,9 +14,11 @@ const (
 )
 
 var (
-	apiKey = os.Getenv("USDA_API_KEY")
+	// apiKey = os.Getenv("USDA_API_KEY")
+	apiKey = "EH6jWPD9LdlAPYrnQzR4luccqsnhUBwSd99kwocV"
 )
 
+// FoodSearchCriteria is the body for the USDA POST /search request
 type FoodSearchCriteria struct {
 	GeneralSearchInput string `json:"generalSearchInput,omitempty"`
 	PageNumber         int    `json:"pageNumber,omitempty"`
@@ -25,6 +26,7 @@ type FoodSearchCriteria struct {
 	RequireAllWords    bool   `json:"requireAllWords,omitempty"`
 }
 
+// UsdaFood is the food result in the USDA POST /search response
 type UsdaFood struct {
 	FdcId         int                    `json:"fdcId,omitempty"`
 	Description   string                 `json:"description,omitempty"`
@@ -33,6 +35,8 @@ type UsdaFood struct {
 	FoodNutrients []AbridgedFoodNutrient `json:"foodNutrients,omitempty"`
 }
 
+// AbridgedFoodNutrient is the nutrient result in the USDA POST /search response
+// note that this contains much less information than FoodNutrient, which is what the USDA POST /foods response contains
 type AbridgedFoodNutrient struct {
 	NutrientId   int     `json:"nutrientId,omitempty"`
 	NutrientName string  `json:"nutrientName,omitempty"`
@@ -40,6 +44,7 @@ type AbridgedFoodNutrient struct {
 	Value        float64 `json:"value,omitempty"`
 }
 
+// FoodSearchResult is the body of the USDA POST /search response
 type FoodSearchResult struct {
 	FoodSearchCriteria FoodSearchCriteria `json:"foodSearchCriteria,omitempty"`
 	CurrentPage        int                `json:"currentPage,omitempty"`
@@ -47,16 +52,19 @@ type FoodSearchResult struct {
 	Foods              []UsdaFood         `json:"foods,omitempty"`
 }
 
-// Food Details (/v1/foods) (currently only /v1/search endpoint is being used)
+// Food Details (/foods) (currently unused)
 
+// FoodDetailRequest is the body for the USDA POST /foods request
 type FoodDetailRequest struct {
-	Food int `json:"food,omitempty"`
+	FdcId int `json:"fdcId,omitempty"`
 }
 
+// FoodsDetailRequest is the body for the USDA bulk POST /foods request
 type FoodsDetailRequest struct {
-	Foods []int `json:"foods,omitempty"`
+	FdcIds []int `json:"fdcIds,omitempty"`
 }
 
+// FoodDetailRequest is the body for the USDA POST /foods response
 type FoodDetailResult struct {
 	FdcId           int            `json:"fdcId,omitempty"`
 	FoodClass       string         `json:"foodClass,omitempty"`
@@ -67,6 +75,8 @@ type FoodDetailResult struct {
 	FoodNutrients   []FoodNutrient `json:"foodNutrients,omitempty"`
 }
 
+// FoodNutrient is the nutrient result in the USDA POST /foods response
+// note that this contains more information than the AbridgedFoodNutrient returned in the POST /search response
 type FoodNutrient struct {
 	Type     string       `json:"type,omitempty"`
 	Id       int          `json:"id,omitempty"`
@@ -74,6 +84,7 @@ type FoodNutrient struct {
 	Amount   float64      `json:"amount,omitempty"`
 }
 
+// USDANutrient is the USDA-specific nutrient result in the USDA POST /foods response
 type USDANutrient struct {
 	Id       int    `json:"id,omitempty"`
 	Number   string `json:"number,omitempty"`
@@ -84,6 +95,7 @@ type USDANutrient struct {
 
 // End of Food Details
 
+// SearchFood queries the USDA database by search keyword string and retrieves a list of matching foods with basic information
 func SearchFood(w http.ResponseWriter, r *http.Request) {
 	client := &http.Client{}
 
@@ -135,6 +147,8 @@ func SearchFood(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(searchResults)
 }
 
+// FoodDetail queries the USDA database and returns the details of a food given the FoodData Central ID of the food
+// note that this function is currently not being used
 func FoodDetail(w http.ResponseWriter, r *http.Request) {
 	client := &http.Client{}
 
@@ -148,7 +162,7 @@ func FoodDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	req, err := http.NewRequest(http.MethodGet, usdaFoodDataCentralEndpoint+strconv.Itoa(queryStr.Food)+"?api_key="+apiKey, nil)
+	req, err := http.NewRequest(http.MethodGet, usdaFoodDataCentralEndpoint+strconv.Itoa(queryStr.FdcId)+"?api_key="+apiKey, nil)
 	if err != nil {
 		log.Println(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
@@ -179,6 +193,8 @@ func FoodDetail(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(searchResults)
 }
 
+// FoodsDetail queries the USDA database and returns the details of a list of foods given a list of FoodData Central IDs of the foods
+// note that this function is currently not being used
 func FoodsDetail(w http.ResponseWriter, r *http.Request) {
 	client := &http.Client{}
 
@@ -194,7 +210,7 @@ func FoodsDetail(w http.ResponseWriter, r *http.Request) {
 
 	fdcIds := ""
 
-	for _, fdcId := range queryStr.Foods {
+	for _, fdcId := range queryStr.FdcIds {
 		fdcIds += strconv.Itoa(fdcId) + ","
 	}
 	fdcIds = strings.TrimSuffix(fdcIds, ",")

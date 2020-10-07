@@ -3,7 +3,6 @@ package lib
 import (
 	"context"
 	"log"
-	"os"
 	"time"
 
 	"go.mongodb.org/mongo-driver/mongo"
@@ -11,9 +10,11 @@ import (
 )
 
 var (
-	dbConnStr = os.Getenv("DB_CONN_STR")
+	// dbConnStr = os.Getenv("DB_CONN_STR")
+	dbConnStr = "mongodb+srv://refactored-spoon-user:zat'sSOfrieeeeeeed?!@cluster0.wmwca.mongodb.net/refactored_spoon_db?retryWrites=true&w=majority"
 )
 
+// GetCollection returns a MongoDB collection given the collection name
 func GetCollection(collectionName string) *mongo.Collection {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()

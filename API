@@ -1,12 +1,6 @@
 REST endpoints
 
-// days
-
-// get all days for user
-GET /days
-
-// add new day for user
-// POST /days
+// --------- days ---------
 
 // get specific day for user
 GET /days/:date (ddmmyy)
@@ -14,10 +8,10 @@ GET /days/:date (ddmmyy)
 // delete day for user
 DELETE /days/:date
 
-note: should not support updating day yet, don't see any usecase
+note: should not support updating day yet, don't see any use case
 
 
-// meals
+// --------- meals ---------
 
 // add meal for user
 POST /days/:date/meals
@@ -38,7 +32,7 @@ PUT /days/:date/meals/:meal
 DELETE /days/:date/meals/:mealId
 
 
-// foods
+// --------- foods ---------
 
 // add food for meal for user
 POST /days/:date/meals/:mealId/foods
@@ -57,3 +51,18 @@ DELETE /days/:date/meals/:mealId/foods/:foodId
 
 // delete all foods of meal for user
 DELETE /days/:date/meals/:mealId/foods
+
+
+// --------- user ---------
+
+// signup
+POST /signup
+
+// login
+POST /login
+
+
+// --------- usda ---------
+
+// search food
+POST /food/search

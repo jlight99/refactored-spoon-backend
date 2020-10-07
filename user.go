@@ -17,6 +17,7 @@ type userRequest struct {
 	Password string             `json:"password,omitempty" bson:"password,omitempty"`
 }
 
+// Signup handles the sign up logic for a new user
 func Signup(w http.ResponseWriter, r *http.Request) {
 	collection := lib.GetCollection("Users")
 
@@ -43,6 +44,7 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(res.InsertedID.(primitive.ObjectID).Hex()))
 }
 
+// Login handles the login logic for a new user
 func Login(w http.ResponseWriter, r *http.Request) {
 	collection := lib.GetCollection("Users")
 
