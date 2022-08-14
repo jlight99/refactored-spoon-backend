@@ -8,6 +8,7 @@ import (
 
 	"github.com/refactored-spoon-backend/internal/lib"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -33,6 +34,22 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
+	// See if username already exists
+	var findRes userRequest
+	err = collection.FindOne(ctx, bson.M{"email": userReq.Email}).Decode(&findRes)
+
+	if err == nil {
+		w.WriteHeader(http.StatusConflict)
+		w.Write([]byte("user with this username already exists!"))
+		return
+	}
+
+	if err != nil && err != mongo.ErrNoDocuments {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("error looking up user with this username:\n" + err.Error()))
+		return
+	}
+
 	res, err := collection.InsertOne(ctx, bson.M{"email": userReq.Email, "password": userReq.Password})
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -44,7 +61,7 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(res.InsertedID.(primitive.ObjectID).Hex()))
 }
 
-// Login handles the login logic for a new user
+// Login handles the login logic for a user
 func Login(w http.ResponseWriter, r *http.Request) {
 	collection := lib.GetCollection("Users")
 
@@ -66,7 +83,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	err = res.Decode(&findRes)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte("could not find user with this login:\n" + err.Error()))
+		w.Write([]byte("could not find user with this login."))
 		return
 	}
 
